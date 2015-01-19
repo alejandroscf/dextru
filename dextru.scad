@@ -42,8 +42,10 @@ idler_alto=extruder_alto-idler_margen;
 	guia_alto=extruder_alto;
 	guia_ancho=idler_ancho+idler_margen+extruder_ancho;
 
+idler_largo_exceso=5;
+
 idler_max_largo_izquierda=extruder_largo/2-(hobbed_surco_d/2+filamento_diametro+guia_margen);
-idler_largo=extruder_largo/2-(hobbed_surco_d/2+filamento_diametro+guia_margen)-idler_margen;
+idler_largo=extruder_largo/2-(hobbed_surco_d/2+filamento_diametro+guia_margen)-idler_margen+idler_largo_exceso;
 
 idler_bolt_margen=5;
 
@@ -93,7 +95,7 @@ union() {
 
         //Idler
         color("blue") translate(
-          [ extruder_largo-idler_largo,
+          [ extruder_largo-idler_largo+idler_largo_exceso,
             -idler_ancho-extruder_ancho-idler_margen,
             idler_margen
           ]) difference() {
@@ -103,17 +105,25 @@ union() {
              //Cilindro
 	          translate([idler_largo/2,idler_ancho/2,idler_largo/2]) rotate([90,0,0]) cylinder(d=idler_largo, h=idler_ancho, center=true);
 	       }
-          //Resta bloque bisagra FIXME
+          //Resta bloque bisagra FIXME 
           translate([-1,idler_ancho/2,-idler_margen])
-            cube([idler_largo+2, idler_ancho/2+0.01, bisagra_alto+idler_redondeo]);
+            cube([idler_largo-3, idler_ancho/2+0.01, bisagra_alto+idler_redondeo]);
 
           //Tornillo(s) de apriete
           translate([0,idler_bolt_margen,idler_alto-idler_bolt_margen]) 
             rotate([0,-90,0]) cylinder(d=t_fary_d, h=1000, center=true);
 
-          //Tornillo eje
+          //Tornillo eje FIXME!
+          translate([(11-3-2),0,extruder_alto/2-idler_margen]) 
+            rotate([90,0,0]) cylinder(d=7.8, h=1000, center=true);
+          
+          translate([-100+(11-3-2),-50,extruder_alto/2-idler_margen-7.8/2]) 
+            cube([100,100,7.8]);
+          
 
           //Agujero rodamiento
+          translate([-50,+idler_ancho/2-7/2,extruder_alto/2-24/2]) 
+            cube([100,7,24]);
 
           //Eje rodamiento
         }
