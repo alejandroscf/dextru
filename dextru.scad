@@ -1,19 +1,55 @@
-include <MCAD/math.scad>
-use <MCAD/motors.scad>
+//include <MCAD/math.scad>
+//use <MCAD/motors.scad>
+//mm_per_inch=25.4;
+
 
 fary_largo=70; //FIXME!
+filamento_diametro=3;
+filamento_margen=1;
+
+//Hobbed mini-hyena
+hobbed_fuer_d=12.4;
+hobbed_surco_d=10;
+hobbed_dentro_d=5;
+hobbed_ancho=10;
+hobbed_ancho_base=7.3;
 
 //Extrusor
-bolt_hole_distance = 1.220*mm_per_inch;
+bolt_hole_distance = 31;
 bolt_diameter=4;
-shaft_diameter=1.725*mm_per_inch/2+1;
-extruder_bolt_margen=3.5*2;
+shaft_diameter=22+1;
+extruder_bolt_margen=7;
 extruder_largo=bolt_hole_distance+2*extruder_bolt_margen;
 extruder_alto=extruder_largo;
 extruder_ancho=8;
 
+//Idler
+idler_margen=1;
+
+idler_ancho=22;
+idler_alto=extruder_alto-idler_margen;
+
+	//Bisagra idler
+	bisagra_largo=extruder_largo/2;
+	bisagra_alto=(extruder_alto-shaft_diameter)/2;
+	bisagra_ancho=idler_ancho/2+idler_margen+extruder_ancho;
+	bisagra_x_offset=extruder_largo/2;
+	
+	//Bloque guia (idler fijo)
+	guia_margen=2;
+	guia_largo=extruder_largo/2+hobbed_surco_d/2+filamento_diametro+guia_margen;
+	guia_alto=extruder_alto;
+	guia_ancho=idler_ancho+idler_margen+extruder_ancho;
+
+idler_max_largo_izquierda=extruder_largo/2-(hobbed_surco_d/2+filamento_diametro+guia_margen);
+idler_largo=extruder_largo/2-(hobbed_surco_d/2+filamento_diametro+guia_margen)-idler_margen;
+
+
+
+
+
 //Apoyo hotend
-base_largo=fary_largo*1.1;
+base_largo=80;
 base_alto=15;
 base_ancho=40;
   //Tornillos fary
@@ -22,17 +58,48 @@ base_ancho=40;
   //Tornillos anclaje
   t_anclaje_d=3+1;
   t_anclaje_separacion=50;
-  t_anclaje_desfase=8;
+  t_anclaje_desfase=0;
   
 
 //Motor virtual
-#translate([(base_largo-extruder_largo)/2,base_ancho,base_alto-0.01]) translate([extruder_largo/2,0,extruder_largo/2]) rotate([90,0,0]) stepper_motor_mount(17);
+//translate([(base_largo-extruder_largo)/2,base_ancho,base_alto-0.01]) translate([extruder_largo/2,0,extruder_largo/2]) rotate([90,0,0]) stepper_motor_mount(17);
 
+difference() {
 union() {
 //Extrusor
-  color("red") translate([(base_largo-extruder_largo)/2,base_ancho-extruder_ancho,base_alto-0.01]){
+  translate([(base_largo-extruder_largo)/2,base_ancho,base_alto-0.01]){
     difference(){
-      cube([extruder_largo,extruder_ancho,extruder_alto]);
+      union(){
+        //Ancalje motor
+        color("red") translate([0,-extruder_ancho,0]) cube([extruder_largo,extruder_ancho,extruder_alto]);
+        
+        //Bloque guia (idler fijo)
+        color("red") translate([0,-guia_ancho,0]) difference() {
+          cube([guia_largo,guia_ancho,guia_alto]);
+          //Rebaje hobbed-idler
+          translate([extruder_largo/2,-500,extruder_alto/2-shaft_diameter/2]) cube([1000,1000,shaft_diameter]);
+          //Rebaje tornillo abajo
+          translate([-0.01,-500,0]) cube([extruder_bolt_margen+4,1000,extruder_bolt_margen+4]);
+
+          //Rebaje tornillo arriba
+          translate([-0.01,-500,extruder_alto-(extruder_bolt_margen+4)+0.01]) cube([extruder_bolt_margen+4,1000,extruder_bolt_margen+4]);
+        }
+
+        //Bisagra idler
+        color("red") translate([bisagra_x_offset,-bisagra_ancho,0]) union() {
+          cube([bisagra_largo,bisagra_ancho,bisagra_alto]);
+        }
+
+        //Idler
+        color("blue") translate([extruder_largo-idler_largo,-idler_ancho-extruder_ancho-idler_margen,idler_margen]) difference() {
+          union() {
+	          translate([0,0,idler_largo/2]) cube([idler_largo,idler_ancho,idler_alto-idler_largo/2]);
+	          translate([idler_largo/2,idler_ancho/2,idler_largo/2]) rotate([90,0,0]) cylinder(d=idler_largo, h=idler_ancho, center=true);
+	       }
+          //FIXME Es repulsivo
+          translate([0,-(-idler_ancho-extruder_ancho-idler_margen)-bisagra_ancho,1]) cube([bisagra_largo,bisagra_ancho,bisagra_alto]);
+        }
+      }
 
       //Tornillos motor
       translate([extruder_bolt_margen,0,extruder_bolt_margen]) rotate([90,0,0]) cylinder(d=bolt_diameter, h=1000, center=true);
@@ -45,7 +112,7 @@ union() {
 
 
       //Agujero shaft
-      translate([extruder_largo/2,0,extruder_largo/2]) rotate([90,0,0]) cylinder(d=shaft_diameter, h=1000, center=true);
+      translate([extruder_largo/2,0,extruder_alto/2]) rotate([90,0,0]) cylinder(d=shaft_diameter, h=1000, center=true);
 
     }
   }
@@ -53,16 +120,21 @@ union() {
 //Apoyo hotend
   difference() {
     cube([base_largo,base_ancho,base_alto]);
-
-  //Tornillos fary
-    translate([base_largo/2-t_fary_separacion/2,base_ancho/2,base_alto/2]) cylinder(d=t_fary_d, h=1000, center=true);
-
-    translate([base_largo/2+t_fary_separacion/2,base_ancho/2,base_alto/2]) cylinder(d=t_fary_d, h=1000, center=true);
-
     
   //Tornillos ancalaje
     translate([base_largo/2-t_anclaje_separacion/2+t_anclaje_desfase,0,base_alto/2]) rotate([90,0,0]) cylinder(d=t_anclaje_d, h=1000, center=true);
 
     translate([base_largo/2+t_anclaje_separacion/2+t_anclaje_desfase,0,base_alto/2]) rotate([90,0,0]) cylinder(d=t_anclaje_d, h=1000, center=true);    
   }
+}
+
+  //Tornillos fary
+translate([base_largo/2+hobbed_surco_d/2+filamento_diametro/2-t_fary_separacion/2,base_ancho/2,base_alto/2]) cylinder(d=t_fary_d, h=1000, center=true);
+
+translate([base_largo/2+hobbed_surco_d/2+filamento_diametro/2+t_fary_separacion/2,base_ancho/2,base_alto/2]) cylinder(d=t_fary_d, h=1000, center=true);
+
+//Agujero filamento
+translate([base_largo/2+hobbed_surco_d/2+filamento_diametro/2,base_ancho-base_ancho/2,0]) 
+  cylinder(d=filamento_diametro+filamento_margen, h=1000, center=true);
+
 }
