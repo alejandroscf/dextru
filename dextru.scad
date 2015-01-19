@@ -25,6 +25,7 @@ extruder_ancho=8;
 
 //Idler
 idler_margen=1;
+idler_redondeo=3;
 
 idler_ancho=22;
 idler_alto=extruder_alto-idler_margen;
@@ -44,7 +45,7 @@ idler_alto=extruder_alto-idler_margen;
 idler_max_largo_izquierda=extruder_largo/2-(hobbed_surco_d/2+filamento_diametro+guia_margen);
 idler_largo=extruder_largo/2-(hobbed_surco_d/2+filamento_diametro+guia_margen)-idler_margen;
 
-
+idler_bolt_margen=5;
 
 
 
@@ -91,13 +92,30 @@ union() {
         }
 
         //Idler
-        color("blue") translate([extruder_largo-idler_largo,-idler_ancho-extruder_ancho-idler_margen,idler_margen]) difference() {
+        color("blue") translate(
+          [ extruder_largo-idler_largo,
+            -idler_ancho-extruder_ancho-idler_margen,
+            idler_margen
+          ]) difference() {
           union() {
+             //Prisma
 	          translate([0,0,idler_largo/2]) cube([idler_largo,idler_ancho,idler_alto-idler_largo/2]);
+             //Cilindro
 	          translate([idler_largo/2,idler_ancho/2,idler_largo/2]) rotate([90,0,0]) cylinder(d=idler_largo, h=idler_ancho, center=true);
 	       }
-          //FIXME Es repulsivo
-          translate([0,-(-idler_ancho-extruder_ancho-idler_margen)-bisagra_ancho,1]) cube([bisagra_largo,bisagra_ancho,bisagra_alto]);
+          //Resta bloque bisagra FIXME
+          translate([-1,idler_ancho/2,-idler_margen])
+            cube([idler_largo+2, idler_ancho/2+0.01, bisagra_alto+idler_redondeo]);
+
+          //Tornillo(s) de apriete
+          translate([0,idler_bolt_margen,idler_alto-idler_bolt_margen]) 
+            rotate([0,-90,0]) cylinder(d=t_fary_d, h=1000, center=true);
+
+          //Tornillo eje
+
+          //Agujero rodamiento
+
+          //Eje rodamiento
         }
       }
 
@@ -113,6 +131,15 @@ union() {
 
       //Agujero shaft
       translate([extruder_largo/2,0,extruder_alto/2]) rotate([90,0,0]) cylinder(d=shaft_diameter, h=1000, center=true);
+
+      //Tornillo(s) de apriete
+      translate(
+          [ extruder_largo-idler_largo,
+            -idler_ancho-extruder_ancho-idler_margen,
+            idler_margen
+          ])
+        translate([0,idler_bolt_margen,idler_alto-idler_bolt_margen]) 
+          rotate([0,-90,0]) cylinder(d=t_fary_d, h=1000, center=true);
 
     }
   }
