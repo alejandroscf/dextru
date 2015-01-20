@@ -14,10 +14,14 @@ hobbed_dentro_d=5;
 hobbed_ancho=10;
 hobbed_ancho_base=7.3;
 
+rodamiento_int_d=8;
+rodamiento_ext_d=7+8+7;
+rodamiento_ancho=7;
+
 //Extrusor
 bolt_hole_distance = 31;
 bolt_diameter=4;
-shaft_diameter=22+1;
+shaft_diameter=23+1;
 extruder_bolt_margen=7;
 extruder_largo=bolt_hole_distance+2*extruder_bolt_margen;
 extruder_alto=extruder_largo;
@@ -29,12 +33,13 @@ idler_redondeo=3;
 
 idler_ancho=22;
 idler_alto=extruder_alto-idler_margen;
+idler_largo=15;
 
 	//Bisagra idler
 	bisagra_largo=extruder_largo/2;
 	bisagra_alto=(extruder_alto-shaft_diameter)/2;
 	bisagra_ancho=idler_ancho/2+idler_margen+extruder_ancho;
-	bisagra_x_offset=extruder_largo/2;
+	//bisagra_x_offset=extruder_largo/2;
 	
 	//Bloque guia (idler fijo)
 	guia_margen=2;
@@ -45,7 +50,7 @@ idler_alto=extruder_alto-idler_margen;
 idler_largo_exceso=5;
 
 idler_max_largo_izquierda=extruder_largo/2-(hobbed_surco_d/2+filamento_diametro+guia_margen);
-idler_largo=extruder_largo/2-(hobbed_surco_d/2+filamento_diametro+guia_margen)-idler_margen+idler_largo_exceso;
+//idler_largo=extruder_largo/2-(hobbed_surco_d/2+filamento_diametro+guia_margen)-idler_margen+idler_largo_exceso;
 
 idler_bolt_margen=5;
 
@@ -89,13 +94,14 @@ union() {
         }
 
         //Bisagra idler
-        color("red") translate([bisagra_x_offset,-bisagra_ancho,0]) union() {
+        *color("red") translate([extruder_largo-bisagra_largo,-bisagra_ancho,0]) union() {
           cube([bisagra_largo,bisagra_ancho,bisagra_alto]);
+          translate([bisagra_largo,0,0]) rotate([90,0,0]) cylinder(r=bisagra_alto-extruder_bolt_margen, h=1000, center=true);
         }
 
         //Idler
         color("blue") translate(
-          [ extruder_largo-idler_largo+idler_largo_exceso,
+          [ extruder_largo-idler_max_largo_izquierda+idler_margen,
             -idler_ancho-extruder_ancho-idler_margen,
             idler_margen
           ]) difference() {
@@ -114,25 +120,26 @@ union() {
             rotate([0,-90,0]) cylinder(d=t_fary_d, h=1000, center=true);
 
           //Tornillo eje FIXME!
-          translate([(11-3-2),0,extruder_alto/2-idler_margen]) 
-            rotate([90,0,0]) cylinder(d=7.8, h=1000, center=true);
-          
-          translate([-100+(11-3-2),-50,extruder_alto/2-idler_margen-7.8/2]) 
-            cube([100,100,7.8]);
+
           
 
           //Agujero rodamiento
-          translate([-50,+idler_ancho/2-7/2,extruder_alto/2-24/2]) 
-            cube([100,7,24]);
+          translate([rodamiento_ext_d/2-guia_margen-idler_margen-filamento_diametro,idler_ancho/2,extruder_alto/2]) 
+            rotate([90,0,0]) cylinder(d=rodamiento_ext_d+1, h=rodamiento_ancho,center=true);
 
           //Eje rodamiento
+          translate([rodamiento_ext_d/2-guia_margen-idler_margen-filamento_diametro,0,extruder_alto/2-idler_margen]) 
+            rotate([90,0,0]) cylinder(d=rodamiento_int_d-0.2, h=1000, center=true);
+          
+          translate([-100+rodamiento_ext_d/2-guia_margen-idler_margen-filamento_diametro,-50,extruder_alto/2-idler_margen-7.8/2]) 
+            cube([100,100,7.8]);
         }
       }
 
       //Tornillos motor
       translate([extruder_bolt_margen,0,extruder_bolt_margen]) rotate([90,0,0]) cylinder(d=bolt_diameter, h=1000, center=true);
 
-      translate([extruder_bolt_margen+bolt_hole_distance,0,extruder_bolt_margen]) rotate([90,0,0]) cylinder(d=bolt_diameter, h=1000, center=true);
+      *translate([extruder_bolt_margen+bolt_hole_distance,0,extruder_bolt_margen]) rotate([90,0,0]) cylinder(d=bolt_diameter, h=1000, center=true);
 
       translate([extruder_bolt_margen,0,extruder_bolt_margen+bolt_hole_distance]) rotate([90,0,0]) cylinder(d=bolt_diameter, h=1000, center=true);
 
